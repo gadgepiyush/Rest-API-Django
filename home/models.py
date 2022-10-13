@@ -16,3 +16,4 @@ class Student(models.Model):
     age = models.IntegerField(default=20)
     father_name = models.CharField(max_length=100)
     
+

@@ -3,13 +3,44 @@ import imp
 from urllib import request
 from django.shortcuts import render
 from rest_framework.decorators import api_view
+from rest_framework.authtoken.models import Token
 from rest_framework.response import Response
 from .models import *
 from .serializers import *
 from rest_framework.views import APIView
-    
+
+
+class RegisterUser(APIView):
+    def post(self, request):
+        serializer = UserSerializer(data= request.data)
+
+        if not serializer.is_valid():
+            return Response({
+                'status' : 403,
+                'message' : "somthing went wrong"
+            })    
+
+        serializer.save()
+
+        user = User.objects.get(username = serializer.data['username'])
+        token_obj, _  = Token.objects.get_or_create(user=user)
+
+        return Response({
+            'status' : 200,
+            'payload' : serializer.data,
+            'token' : str(token_obj),
+            'message' : 'data sent successfully'
+        })
+
+
+
+from rest_framework.authentication import TokenAuthentication
+from rest_framework.permissions import IsAuthenticated
 
 class StudentAPI(APIView):
+    authentication_classes = [TokenAuthentication]
+    permission_classes = [IsAuthenticated]
+
     def get(self, request):
         student_objs = Student.objects.all()
         serializer = StudentSerializer(student_objs, many=True)
